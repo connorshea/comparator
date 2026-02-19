@@ -1,3 +1,4 @@
+import * as fs from "node:fs";
 import * as path from "node:path";
 import { cloneRepo } from "./clone.js";
 import { runEslint } from "./run-eslint.js";
@@ -6,6 +7,20 @@ import { parseEslintOutput } from "./parse-eslint.js";
 import { parseOxlintOutput } from "./parse-oxlint.js";
 import { compareViolations } from "./compare.js";
 import type { ComparisonReport, NormalizedViolation } from "./types.js";
+
+function getPackageVersion(repoDir: string, packageName: string): string {
+  try {
+    const pkgJson = JSON.parse(
+      fs.readFileSync(
+        path.join(repoDir, "node_modules", packageName, "package.json"),
+        "utf8"
+      )
+    ) as { version: string };
+    return pkgJson.version;
+  } catch {
+    return "unknown";
+  }
+}
 
 function parseArgs(argv: string[]): {
   repoUrl: string;
@@ -37,7 +52,17 @@ function parseArgs(argv: string[]): {
   return { repoUrl, branch, typeAware };
 }
 
-function printReport(report: ComparisonReport, repoUrl: string): void {
+interface ToolVersions {
+  eslint: string;
+  oxlint: string;
+  oxlintTsgolint?: string;
+}
+
+function printReport(
+  report: ComparisonReport,
+  repoUrl: string,
+  versions: ToolVersions
+): void {
   const matchPct =
     report.eslintTotal > 0
       ? ((report.matchedCount / report.eslintTotal) * 100).toFixed(1)
@@ -91,9 +116,15 @@ function printReport(report: ComparisonReport, repoUrl: string): void {
     }
   }
 
+  const versionParts = [
+    `ESLint ${versions.eslint}`,
+    `Oxlint ${versions.oxlint}`,
+    ...(versions.oxlintTsgolint ? [`oxlint-tsgolint ${versions.oxlintTsgolint}`] : []),
+  ];
   console.log(
     `\nSummary: Migration ported ${report.portedRulesCount} rules. Oxlint matched ${matchPct}% of ESLint violations for supported rules.`
   );
+  console.log(`Versions: ${versionParts.join(", ")}`);
 }
 
 async function main(): Promise<void> {
@@ -139,7 +170,14 @@ async function main(): Promise<void> {
   );
 
   // Phase 7: Report
-  printReport(report, repoUrl);
+  const versions: ToolVersions = {
+    eslint: getPackageVersion(repoDir, "eslint"),
+    oxlint: getPackageVersion(repoDir, "oxlint"),
+    ...(typeAware && {
+      oxlintTsgolint: getPackageVersion(repoDir, "oxlint-tsgolint"),
+    }),
+  };
+  printReport(report, repoUrl, versions);
 }
 
 main().catch((err) => {

@@ -15,7 +15,7 @@ export function migrateToOxlint(
   const { typeAware = false } = options;
   const pm = detectPackageManager(repoDir);
 
-  const packages = ["oxlint", "@oxlint/migrate", ...(typeAware ? ["oxlint-tsgolint"] : [])];
+  const packages = ["oxlint", ...(typeAware ? ["oxlint-tsgolint"] : [])];
   const addCmd =
     pm === "pnpm"
       ? `pnpm add --save-dev ${packages.join(" ")}`
@@ -27,15 +27,10 @@ export function migrateToOxlint(
   execSync(addCmd, { cwd: repoDir, stdio: "inherit" });
 
   console.log("[oxlint] Running @oxlint/migrate...");
-  const [migrateBin, ...migrateArgs] =
-    pm === "pnpm"
-      ? ["pnpm", "exec", "@oxlint/migrate", "--details"]
-      : pm === "yarn"
-        ? ["yarn", "exec", "@oxlint/migrate", "--details"]
-        : ["npx", "@oxlint/migrate", "--details"];
+  const migrateArgs = ["--yes", "@oxlint/migrate", "--details"];
   if (typeAware) migrateArgs.push("--type-aware");
 
-  const result = spawnSync(migrateBin, migrateArgs, {
+  const result = spawnSync("npx", migrateArgs, {
     cwd: repoDir,
     stdio: ["ignore", "pipe", "pipe"],
     encoding: "utf8",
