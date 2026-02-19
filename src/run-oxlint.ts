@@ -135,19 +135,23 @@ export function runOxlint(
   const oxlintArgs = [...execPrefix, "--format", "json"];
   if (typeAware) oxlintArgs.push("--type-aware");
 
+  // Write stdout directly to the output file via fd to avoid ENOBUFS on large repos
+  const outFd = fs.openSync(outputFile, "w");
   const result = spawnSync(bin, oxlintArgs, {
     cwd: repoDir,
-    stdio: ["ignore", "pipe", "pipe"],
-    encoding: "utf8",
+    stdio: ["ignore", outFd, "pipe"],
   });
+  fs.closeSync(outFd);
 
   if (result.error) {
     throw new Error(`Failed to run Oxlint: ${result.error.message}`);
   }
 
-  // Oxlint exits non-zero when violations found — not fatal
-  const stdout = result.stdout ?? "";
-  fs.writeFileSync(outputFile, stdout || '{"diagnostics":[]}', "utf8");
+  // If oxlint wrote nothing (e.g. no files matched), ensure valid JSON
+  const written = fs.readFileSync(outputFile, "utf8").trim();
+  if (!written) {
+    fs.writeFileSync(outputFile, '{"diagnostics":[]}', "utf8");
+  }
 
   console.log(`[oxlint] Output written to ${outputFile}`);
   return outputFile;
