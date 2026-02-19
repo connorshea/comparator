@@ -20,11 +20,12 @@ export function cloneRepo(repoUrl: string, branch?: string): string {
     console.log(`[clone] Directory ${repoDir} already exists, skipping clone.`);
     console.log("[clone] To re-clone, delete the directory and run again.");
   } else {
-    console.log(`[clone] Cloning ${repoUrl} into ${repoDir}...`);
-    const cloneArgs = ["clone", repoUrl, repoDir];
+    console.log(`[clone] Cloning ${repoUrl} into ${repoDir} (shallow)...`);
+    const cloneArgs = ["clone", "--depth", "1", repoUrl, repoDir];
     if (branch) {
-      cloneArgs.push("--branch", branch, "--single-branch");
+      cloneArgs.push("--branch", branch);
     }
+    cloneArgs.push("--single-branch");
     const result = spawnSync("git", cloneArgs, { stdio: "inherit" });
     if (result.status !== 0) {
       throw new Error(`git clone failed with exit code ${result.status}`);
