@@ -1,17 +1,24 @@
 /**
- * Maps Oxlint rule codes (format: "plugin(rule-name)") to ESLint canonical names.
+ * Maps Oxlint rule codes to ESLint canonical names.
+ *
+ * Oxlint codes use two formats:
+ *   - "eslint(rule-name)"                  → "rule-name"
+ *   - "eslint-plugin-react(rule-name)"     → "react/rule-name"
+ *   - "eslint-plugin-import(rule-name)"    → "import/rule-name"
+ *   etc.
  *
  * Special cases handled:
- * - react(exhaustive-deps) → react-hooks/exhaustive-deps
- * - react(rules-of-hooks) → react-hooks/rules-of-hooks
- * - node(rule-name) → n/rule-name
+ * - eslint-plugin-react(exhaustive-deps) → react-hooks/exhaustive-deps
+ * - eslint-plugin-react(rules-of-hooks)  → react-hooks/rules-of-hooks
+ * - eslint-plugin-node(rule-name)        → n/rule-name
  */
 
 const SPECIAL_CASE_MAP: Record<string, string> = {
-  "react(exhaustive-deps)": "react-hooks/exhaustive-deps",
-  "react(rules-of-hooks)": "react-hooks/rules-of-hooks",
+  "eslint-plugin-react(exhaustive-deps)": "react-hooks/exhaustive-deps",
+  "eslint-plugin-react(rules-of-hooks)": "react-hooks/rules-of-hooks",
 };
 
+// Keyed by the plugin segment after stripping "eslint-plugin-" (or "eslint" for core)
 const PLUGIN_PREFIX_MAP: Record<string, string> = {
   eslint: "",
   react: "react/",
@@ -45,17 +52,19 @@ export function normalizeOxlintRule(code: string): NormalizeResult {
     return { ruleId: SPECIAL_CASE_MAP[code], unmapped: false };
   }
 
-  // Parse "plugin(rule-name)" format
+  // Parse "eslint-plugin-X(rule-name)" or "eslint(rule-name)" format
   const match = code.match(/^([\w-]+)\((.+)\)$/);
   if (!match) {
-    // Not a recognized format — treat as unmapped
     return { ruleId: code, unmapped: true };
   }
 
-  const [, plugin, ruleName] = match;
+  const [, rawPlugin, ruleName] = match;
+  // Strip "eslint-plugin-" prefix if present
+  const plugin = rawPlugin.startsWith("eslint-plugin-")
+    ? rawPlugin.slice("eslint-plugin-".length)
+    : rawPlugin;
 
   if (!(plugin in PLUGIN_PREFIX_MAP)) {
-    // Unknown plugin — log as unmapped
     return { ruleId: code, unmapped: true };
   }
 

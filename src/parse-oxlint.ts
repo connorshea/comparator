@@ -4,8 +4,10 @@ import type { NormalizedViolation } from "./types.js";
 import { normalizeOxlintRule } from "./normalize-rules.js";
 
 interface OxlintSpan {
-  start: { line: number; column: number };
-  end: { line: number; column: number };
+  offset: number;
+  length: number;
+  line: number;
+  column: number;
 }
 
 interface OxlintLabel {
@@ -61,9 +63,9 @@ export function parseOxlintOutput(
     const label = diagnostic.labels?.[0];
     if (!label?.span) continue;
 
-    // Oxlint spans are 0-based; convert to 1-based
-    const line = label.span.start.line + 1;
-    const column = label.span.start.column + 1;
+    // Oxlint span line/column are 1-based
+    const line = label.span.line;
+    const column = label.span.column;
 
     const { ruleId, unmapped } = normalizeOxlintRule(diagnostic.code);
     if (unmapped) {
