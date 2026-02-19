@@ -12,4 +12,5 @@ export interface ComparisonReport {
   onlyInOxlint: NormalizedViolation[];
   matchedCount: number;
   unsupportedRules: string[];
+  portedRulesCount: number;
 }

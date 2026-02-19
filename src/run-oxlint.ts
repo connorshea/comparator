@@ -4,6 +4,7 @@ import * as path from "node:path";
 
 export interface MigrationResult {
   unsupportedRules: string[];
+  portedRulesCount: number;
 }
 
 export function migrateToOxlint(repoDir: string): MigrationResult {
@@ -32,11 +33,32 @@ export function migrateToOxlint(repoDir: string): MigrationResult {
   }
 
   const unsupportedRules = parseMigrationOutput(output);
+  const portedRulesCount = countPortedRules(repoDir);
   console.log(
-    `[oxlint] Migration complete. ${unsupportedRules.length} unsupported rules found.`
+    `[oxlint] Migration complete. ${portedRulesCount} rules ported, ${unsupportedRules.length} unsupported.`
   );
 
-  return { unsupportedRules };
+  return { unsupportedRules, portedRulesCount };
+}
+
+function countPortedRules(repoDir: string): number {
+  const oxlintrcPath = path.join(repoDir, ".oxlintrc.json");
+  if (!fs.existsSync(oxlintrcPath)) return 0;
+
+  try {
+    const rc = JSON.parse(fs.readFileSync(oxlintrcPath, "utf8")) as {
+      rules?: Record<string, unknown>;
+      overrides?: Array<{ rules?: Record<string, unknown> }>;
+    };
+    const ruleNames = new Set<string>();
+    for (const name of Object.keys(rc.rules ?? {})) ruleNames.add(name);
+    for (const override of rc.overrides ?? []) {
+      for (const name of Object.keys(override.rules ?? {})) ruleNames.add(name);
+    }
+    return ruleNames.size;
+  } catch {
+    return 0;
+  }
 }
 
 function parseMigrationOutput(output: string): string[] {

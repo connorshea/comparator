@@ -7,7 +7,8 @@ function violationKey(v: NormalizedViolation): string {
 export function compareViolations(
   eslintViolations: NormalizedViolation[],
   oxlintViolations: NormalizedViolation[],
-  unsupportedRules: Set<string>
+  unsupportedRules: Set<string>,
+  portedRulesCount: number
 ): ComparisonReport {
   // Filter ESLint violations to only those for rules Oxlint supports
   const filteredEslint = eslintViolations.filter(
@@ -58,5 +59,6 @@ export function compareViolations(
     onlyInOxlint,
     matchedCount,
     unsupportedRules: [...unsupportedRules],
+    portedRulesCount,
   };
 }

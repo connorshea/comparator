@@ -83,7 +83,7 @@ function printReport(report: ComparisonReport, repoUrl: string): void {
   }
 
   console.log(
-    `\nSummary: Oxlint matched ${matchPct}% of ESLint violations for supported rules.`
+    `\nSummary: Migration ported ${report.portedRulesCount} rules. Oxlint matched ${matchPct}% of ESLint violations for supported rules.`
   );
 }
 
@@ -101,7 +101,7 @@ async function main(): Promise<void> {
   const eslintOutputFile = runEslint(repoDir);
 
   // Phase 3: Migrate ESLint config → Oxlint config
-  const { unsupportedRules } = migrateToOxlint(repoDir);
+  const { unsupportedRules, portedRulesCount } = migrateToOxlint(repoDir);
 
   // Phase 4: Run Oxlint
   const oxlintOutputFile = runOxlint(repoDir);
@@ -124,7 +124,8 @@ async function main(): Promise<void> {
   const report = compareViolations(
     eslintViolations,
     oxlintViolations,
-    new Set(unsupportedRules)
+    new Set(unsupportedRules),
+    portedRulesCount
   );
 
   // Phase 7: Report
