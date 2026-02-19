@@ -1,0 +1,17 @@
+{
+  "name": "comparator",
+  "version": "1.0.0",
+  "description": "Compare ESLint and Oxlint violations on a target repository",
+  "scripts": {
+    "compare": "tsx src/index.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.29.3",
+  "devDependencies": {
+    "@types/node": "^25.2.3",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}
