@@ -42,15 +42,25 @@ export function runEslint(repoDir: string): string {
   }
 
   // ESLint with --output-file writes to the file; if no violations, it may
-  // still write an empty array. Ensure the file exists.
-  if (!fs.existsSync(outputFile)) {
-    // ESLint may have written to stdout instead
-    const stdout = result.stdout?.toString() ?? "[]";
-    fs.writeFileSync(outputFile, stdout || "[]", "utf8");
-  }
+  // still write an empty array. Ensure the file exists and contains valid JSON.
+  const stdout = (result.stdout ?? "").trim();
+  const fileContent = fs.existsSync(outputFile)
+    ? fs.readFileSync(outputFile, "utf8").trim()
+    : "";
 
-  const content = fs.readFileSync(outputFile, "utf8").trim();
-  if (!content || content === "") {
+  const looksLikeJson = (s: string) => s.startsWith("[");
+
+  if (looksLikeJson(fileContent)) {
+    // Output file is good — nothing to do
+  } else if (looksLikeJson(stdout)) {
+    // --output-file didn't work; ESLint wrote JSON to stdout instead
+    fs.writeFileSync(outputFile, stdout, "utf8");
+  } else {
+    if (fileContent && !looksLikeJson(fileContent)) {
+      console.warn(
+        `[eslint] Output file contained unexpected content, treating as empty results.`
+      );
+    }
     fs.writeFileSync(outputFile, "[]", "utf8");
   }
 
