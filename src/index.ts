@@ -7,25 +7,34 @@ import { parseOxlintOutput } from "./parse-oxlint.js";
 import { compareViolations } from "./compare.js";
 import type { ComparisonReport, NormalizedViolation } from "./types.js";
 
-function parseArgs(argv: string[]): { repoUrl: string; branch?: string } {
+function parseArgs(argv: string[]): {
+  repoUrl: string;
+  branch?: string;
+  typeAware: boolean;
+} {
   const args = argv.slice(2); // remove 'node' and script path
 
   if (args.length === 0) {
-    console.error("Usage: pnpm run compare <repo-url> [--branch <branch>]");
+    console.error(
+      "Usage: pnpm run compare <repo-url> [--branch <branch>] [--type-aware]"
+    );
     process.exit(1);
   }
 
   const repoUrl = args[0];
   let branch: string | undefined;
+  let typeAware = false;
 
   for (let i = 1; i < args.length; i++) {
     if (args[i] === "--branch" && args[i + 1]) {
       branch = args[i + 1];
       i++;
+    } else if (args[i] === "--type-aware") {
+      typeAware = true;
     }
   }
 
-  return { repoUrl, branch };
+  return { repoUrl, branch, typeAware };
 }
 
 function printReport(report: ComparisonReport, repoUrl: string): void {
@@ -88,10 +97,11 @@ function printReport(report: ComparisonReport, repoUrl: string): void {
 }
 
 async function main(): Promise<void> {
-  const { repoUrl, branch } = parseArgs(process.argv);
+  const { repoUrl, branch, typeAware } = parseArgs(process.argv);
 
   console.log(`\n[comparator] Starting comparison for: ${repoUrl}`);
   if (branch) console.log(`[comparator] Branch: ${branch}`);
+  if (typeAware) console.log(`[comparator] Mode: type-aware`);
 
   // Phase 1: Clone and install
   const repoDir = cloneRepo(repoUrl, branch);
@@ -101,10 +111,10 @@ async function main(): Promise<void> {
   const eslintOutputFile = runEslint(repoDir);
 
   // Phase 3: Migrate ESLint config → Oxlint config
-  const { unsupportedRules, portedRulesCount } = migrateToOxlint(repoDir);
+  const { unsupportedRules, portedRulesCount } = migrateToOxlint(repoDir, { typeAware });
 
   // Phase 4: Run Oxlint
-  const oxlintOutputFile = runOxlint(repoDir);
+  const oxlintOutputFile = runOxlint(repoDir, { typeAware });
 
   // Phase 5: Parse outputs
   const eslintViolations = parseEslintOutput(eslintOutputFile, repoDir);

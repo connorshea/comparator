@@ -1,21 +1,41 @@
 import { execSync, spawnSync } from "node:child_process";
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { detectPackageManager } from "./clone.js";
 
 export interface MigrationResult {
   unsupportedRules: string[];
   portedRulesCount: number;
 }
 
-export function migrateToOxlint(repoDir: string): MigrationResult {
-  console.log("[oxlint] Installing @oxlint/migrate and oxlint...");
-  execSync("npx --yes oxlint@latest --version", {
-    cwd: repoDir,
-    stdio: "ignore",
-  });
+export function migrateToOxlint(
+  repoDir: string,
+  options: { typeAware?: boolean } = {}
+): MigrationResult {
+  const { typeAware = false } = options;
+  const pm = detectPackageManager(repoDir);
+
+  const packages = ["oxlint", "@oxlint/migrate", ...(typeAware ? ["oxlint-tsgolint"] : [])];
+  const addCmd =
+    pm === "pnpm"
+      ? `pnpm add --save-dev ${packages.join(" ")}`
+      : pm === "yarn"
+        ? `yarn add --dev ${packages.join(" ")}`
+        : `npm install --save-dev ${packages.join(" ")}`;
+
+  console.log(`[oxlint] Installing ${packages.join(", ")}...`);
+  execSync(addCmd, { cwd: repoDir, stdio: "inherit" });
 
   console.log("[oxlint] Running @oxlint/migrate...");
-  const result = spawnSync("npx", ["--yes", "@oxlint/migrate", "--details"], {
+  const [migrateBin, ...migrateArgs] =
+    pm === "pnpm"
+      ? ["pnpm", "exec", "@oxlint/migrate", "--details"]
+      : pm === "yarn"
+        ? ["yarn", "exec", "@oxlint/migrate", "--details"]
+        : ["npx", "@oxlint/migrate", "--details"];
+  if (typeAware) migrateArgs.push("--type-aware");
+
+  const result = spawnSync(migrateBin, migrateArgs, {
     cwd: repoDir,
     stdio: ["ignore", "pipe", "pipe"],
     encoding: "utf8",
@@ -100,20 +120,31 @@ function parseMigrationOutput(output: string): string[] {
   return [...new Set(unsupported)];
 }
 
-export function runOxlint(repoDir: string): string {
+export function runOxlint(
+  repoDir: string,
+  options: { typeAware?: boolean } = {}
+): string {
+  const { typeAware = false } = options;
   const outputFile = path.join(repoDir, "oxlint-output.json");
 
-  console.log("[oxlint] Running Oxlint...");
+  console.log(`[oxlint] Running Oxlint${typeAware ? " (type-aware)" : ""}...`);
 
-  const result = spawnSync(
-    "npx",
-    ["oxlint", "--format", "json"],
-    {
-      cwd: repoDir,
-      stdio: ["ignore", "pipe", "pipe"],
-      encoding: "utf8",
-    }
-  );
+  const pm = detectPackageManager(repoDir);
+  const [bin, ...execPrefix] =
+    pm === "pnpm"
+      ? ["pnpm", "exec", "oxlint"]
+      : pm === "yarn"
+        ? ["yarn", "exec", "oxlint"]
+        : ["npx", "oxlint"];
+
+  const oxlintArgs = [...execPrefix, "--format", "json"];
+  if (typeAware) oxlintArgs.push("--type-aware");
+
+  const result = spawnSync(bin, oxlintArgs, {
+    cwd: repoDir,
+    stdio: ["ignore", "pipe", "pipe"],
+    encoding: "utf8",
+  });
 
   if (result.error) {
     throw new Error(`Failed to run Oxlint: ${result.error.message}`);

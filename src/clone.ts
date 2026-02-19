@@ -4,7 +4,7 @@ import * as path from "node:path";
 
 const WORKDIR = path.join(process.cwd(), ".comparator-workdir");
 
-function detectPackageManager(repoDir: string): "pnpm" | "yarn" | "npm" {
+export function detectPackageManager(repoDir: string): "pnpm" | "yarn" | "npm" {
   if (fs.existsSync(path.join(repoDir, "pnpm-lock.yaml"))) return "pnpm";
   if (fs.existsSync(path.join(repoDir, "yarn.lock"))) return "yarn";
   return "npm";

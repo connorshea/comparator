@@ -1,6 +1,7 @@
 import { spawnSync } from "node:child_process";
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { detectPackageManager } from "./clone.js";
 
 export function runEslint(repoDir: string): string {
   const outputFile = path.join(repoDir, "eslint-output.json");
@@ -15,10 +16,15 @@ export function runEslint(repoDir: string): string {
     );
   }
 
-  const result = spawnSync(
-    "npx",
-    ["eslint", ".", "--format", "json", "--output-file", outputFile],
-    {
+  const pm = detectPackageManager(repoDir);
+  const [bin, ...eslintArgs] =
+    pm === "pnpm"
+      ? ["pnpm", "exec", "eslint", ".", "--format", "json", "--output-file", outputFile]
+      : pm === "yarn"
+        ? ["yarn", "exec", "eslint", ".", "--format", "json", "--output-file", outputFile]
+        : ["npx", "eslint", ".", "--format", "json", "--output-file", outputFile];
+
+  const result = spawnSync(bin, eslintArgs, {
       cwd: repoDir,
       stdio: ["ignore", "pipe", "pipe"],
       encoding: "utf8",
