@@ -121,8 +121,13 @@ function printReport(
     `Oxlint ${versions.oxlint}`,
     ...(versions.oxlintTsgolint ? [`oxlint-tsgolint ${versions.oxlintTsgolint}`] : []),
   ];
+  const totalRules = report.portedRulesCount + report.unsupportedRules.length;
+  const portedPct =
+    totalRules > 0
+      ? ((report.portedRulesCount / totalRules) * 100).toFixed(1)
+      : "N/A";
   console.log(
-    `\nSummary: Migration ported ${report.portedRulesCount} rules. Oxlint matched ${matchPct}% of ESLint violations for supported rules.`
+    `\nSummary: Migration ported ${report.portedRulesCount} rules (${portedPct}% of ${totalRules} total). Oxlint matched ${matchPct}% of ESLint violations for supported rules.`
   );
   console.log(`Versions: ${versionParts.join(", ")}`);
 }
