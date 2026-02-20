@@ -85,3 +85,8 @@ Example repos I have tested the tool on:
 - https://github.com/renovatebot/renovate (use Node 24.11.0)
 - https://github.com/microsoft/vscode (use Node 22.22.0)
 - https://github.com/mastodon/mastodon (note that the ESLint config for Mastodon is _weird_ and intentionally excludes all js/jsx files from linting in a way that Oxlint doesn't manage to migrate correctly, so the results are a bit wonky)
+
+
+## TODO
+
+- [ ] Add a `--js-plugins` flag, unfortunately I'm unsure how successful it'll be since so many repos use local plugins that can't be migrated automatically right now.
