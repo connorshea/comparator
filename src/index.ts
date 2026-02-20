@@ -147,11 +147,11 @@ async function main(): Promise<void> {
   const repoDir = cloneRepo(repoUrl, branch);
   console.log(`[comparator] Repo ready at: ${repoDir}`);
 
-  // Phase 2: Run ESLint
-  const eslintOutputFile = runEslint(repoDir);
-
-  // Phase 3: Migrate ESLint config → Oxlint config
+  // Phase 2: Migrate ESLint config → Oxlint config
   const { unsupportedRules, portedRulesCount } = migrateToOxlint(repoDir, { typeAware });
+
+  // Phase 3: Run ESLint
+  const eslintOutputFile = runEslint(repoDir);
 
   // Phase 4: Run Oxlint
   const oxlintOutputFile = runOxlint(repoDir, { typeAware });
