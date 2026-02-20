@@ -27,7 +27,7 @@ export function migrateToOxlint(
   execSync(addCmd, { cwd: repoDir, stdio: "inherit" });
 
   console.log("[oxlint] Running @oxlint/migrate...");
-  const migrateArgs = ["--yes", "@oxlint/migrate", "--details"];
+  const migrateArgs = ["--yes", "@oxlint/migrate", "--details", "--with-nursery"];
   if (typeAware) migrateArgs.push("--type-aware");
 
   const result = spawnSync("npx", migrateArgs, {
