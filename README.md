@@ -57,19 +57,19 @@ Matched violations: 0
   (none)
 
 --- Only in Oxlint (19 violations) ---
-  test/docs/documentation.spec.ts:228:41  jest/valid-describe-callback
-  lib/config/global.spec.ts:9:5  jest/valid-expect
-  lib/config/inherit.spec.ts:9:5  jest/valid-expect
-  lib/modules/manager/index.spec.ts:29:7  vitest/no-conditional-tests
-  lib/modules/datasource/deb/index.spec.ts:280:7  vitest/hoisted-apis-on-top
-  lib/modules/datasource/crate/index.spec.ts:322:7  vitest/hoisted-apis-on-top
-  lib/modules/manager/haskell-cabal/extract.spec.ts:91:5  jest/no-standalone-expect
-  lib/modules/manager/haskell-cabal/index.spec.ts:32:5  jest/no-standalone-expect
-  lib/util/git/index.spec.ts:40:28  jest/valid-describe-callback
-  lib/config/presets/internal/index.spec.ts:32:7  vitest/no-conditional-tests
   lib/config/options/index.spec.ts:55:7  vitest/no-conditional-tests
   lib/config/options/index.spec.ts:75:7  vitest/no-conditional-tests
   lib/config/options/index.spec.ts:83:13  vitest/no-conditional-tests
+  lib/modules/datasource/deb/index.spec.ts:280:7  vitest/hoisted-apis-on-top
+  lib/util/git/index.spec.ts:40:28  jest/valid-describe-callback
+  lib/modules/manager/haskell-cabal/extract.spec.ts:91:5  jest/no-standalone-expect
+  lib/modules/manager/haskell-cabal/index.spec.ts:32:5  jest/no-standalone-expect
+  lib/config/presets/internal/index.spec.ts:32:7  vitest/no-conditional-tests
+  lib/config/global.spec.ts:9:5  jest/valid-expect
+  lib/config/inherit.spec.ts:9:5  jest/valid-expect
+  lib/modules/datasource/crate/index.spec.ts:322:7  vitest/hoisted-apis-on-top
+  test/docs/documentation.spec.ts:228:41  jest/valid-describe-callback
+  lib/modules/manager/index.spec.ts:29:7  vitest/no-conditional-tests
   lib/modules/versioning/docker/index.ts:84:7  @typescript-eslint/prefer-optional-chain
   lib/modules/versioning/index.ts:24:9  @typescript-eslint/prefer-optional-chain
   lib/modules/datasource/docker/index.ts:667:20  @typescript-eslint/no-unnecessary-type-assertion
@@ -77,10 +77,20 @@ Matched violations: 0
   lib/modules/manager/homebrew/extract.ts:24:7  @typescript-eslint/prefer-optional-chain
   lib/workers/repository/update/pr/index.ts:605:7  @typescript-eslint/prefer-optional-chain
 
---- Unsupported Rules (skipped, 1 total) ---
+--- Unsupported Rules (skipped, 11 total) ---
+  @containerbase/test-root-describe
+  import-x/no-extraneous-dependencies
+  import-x/no-restricted-paths
+  @typescript-eslint/naming-convention
+  object-shorthand
+  vitest/prefer-called-exactly-once-with
+  vitest/valid-expect-in-promise
+  vitest/valid-title
+  no-dupe-args
+  no-octal
   import-x/no-unresolved
 
-Summary: Migration ported 178 rules (99.4% of 179 total). ESLint reported no violations.
+Summary: Migration ported 178 rules (94.2% of 189 total). ESLint reported no violations.
 Versions: ESLint 9.39.2, Oxlint 1.49.0, oxlint-tsgolint 0.14.1
 ```
 
