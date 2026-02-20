@@ -79,36 +79,39 @@ function countPortedRules(repoDir: string): number {
 function parseMigrationOutput(output: string): string[] {
   const unsupported: string[] = [];
 
-  // The --details flag prints unsupported rules. Lines typically look like:
-  // "  - @typescript-eslint/no-floating-promises (not supported)"
-  // "  - custom-plugin/rule-name"
-  // We look for "unsupported" sections in the output.
+  // The --details flag prints a "Skipped N rules:" block with subcategories:
+  //
+  //    Skipped 47 rules:
+  //      - 6 Nursery
+  //        - getter-return
+  //        - import-x/named
+  //      - 19 Unsupported
+  //        - no-dupe-args: Superseded by strict mode.
+  //        - import-x/no-unresolved: Will always contain false positives...
+  //
+  // All skipped rules (regardless of subcategory) are rules that ESLint may
+  // flag but Oxlint won't, so we collect them all for filtering.
   const lines = output.split("\n");
-  let inUnsupportedSection = false;
+  let inSkippedSection = false;
 
   for (const line of lines) {
-    const lower = line.toLowerCase();
-
-    // Detect section headers
-    if (
-      lower.includes("unsupported") ||
-      lower.includes("not supported") ||
-      lower.includes("cannot migrate")
-    ) {
-      inUnsupportedSection = true;
+    if (/skipped \d+ rules/i.test(line)) {
+      inSkippedSection = true;
+      continue;
     }
 
-    if (inUnsupportedSection) {
-      // Match rule-like patterns: word/word, @scope/package/rule, etc.
-      const ruleMatch = line.match(/[-•*]\s+([@\w][\w/@-]*\/[\w-]+)/);
-      if (ruleMatch) {
-        unsupported.push(ruleMatch[1]);
-      }
-    }
+    if (!inSkippedSection) continue;
 
-    // Reset section on blank line after content
-    if (inUnsupportedSection && line.trim() === "" && unsupported.length > 0) {
-      // Keep scanning — there may be multiple sections
+    // Subcategory headers look like "  - 6 Nursery" or "  - 21 JS Plugins".
+    // Skip them so we don't mistake the count for a rule name.
+    if (/^\s+-\s+\d+\s+/.test(line)) continue;
+
+    // Rule entries: "    - rule-name" or "    - rule-name: reason text"
+    // Capture the non-whitespace token after "- "; strip a trailing colon if
+    // the rule name is followed by ": <reason>" on the same line.
+    const m = line.match(/^\s+-\s+(\S+)/);
+    if (m) {
+      unsupported.push(m[1].replace(/:$/, ""));
     }
   }
 
