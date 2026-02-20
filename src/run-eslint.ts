@@ -27,7 +27,7 @@ export function runEslint(
     pm === "pnpm"
       ? ["pnpm", "exec", "eslint", ...baseArgs]
       : pm === "yarn"
-        ? ["yarn", "exec", "eslint", ...baseArgs]
+        ? ["yarn", "--silent", "exec", "eslint", ...baseArgs]
         : ["npx", "eslint", ...baseArgs];
 
   const result = spawnSync(bin, eslintArgs, {
