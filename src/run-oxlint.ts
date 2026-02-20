@@ -129,7 +129,7 @@ export function runOxlint(
     pm === "pnpm"
       ? ["pnpm", "exec", "oxlint"]
       : pm === "yarn"
-        ? ["yarn", "exec", "oxlint"]
+        ? ["yarn", "run", "oxlint"]
         : ["npx", "oxlint"];
 
   const oxlintArgs = [...execPrefix, "--format", "json"];

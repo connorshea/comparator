@@ -27,12 +27,13 @@ function parseArgs(argv: string[]): {
   branch?: string;
   typeAware: boolean;
   path?: string;
+  skipEslint: boolean;
 } {
   const args = argv.slice(2); // remove 'node' and script path
 
   if (args.length === 0) {
     console.error(
-      "Usage: pnpm run compare <repo-url> [--branch <branch>] [--path <dir-or-glob>] [--type-aware]"
+      "Usage: pnpm run compare <repo-url> [--branch <branch>] [--path <dir-or-glob>] [--type-aware] [--skip-eslint]"
     );
     process.exit(1);
   }
@@ -41,6 +42,7 @@ function parseArgs(argv: string[]): {
   let branch: string | undefined;
   let typeAware = false;
   let path: string | undefined;
+  let skipEslint = false;
 
   for (let i = 1; i < args.length; i++) {
     if (args[i] === "--branch" && args[i + 1]) {
@@ -51,10 +53,12 @@ function parseArgs(argv: string[]): {
       i++;
     } else if (args[i] === "--type-aware") {
       typeAware = true;
+    } else if (args[i] === "--skip-eslint") {
+      skipEslint = true;
     }
   }
 
-  return { repoUrl, branch, typeAware, path };
+  return { repoUrl, branch, typeAware, path, skipEslint };
 }
 
 interface ToolVersions {
@@ -66,8 +70,10 @@ interface ToolVersions {
 function printReport(
   report: ComparisonReport,
   repoUrl: string,
-  versions: ToolVersions
+  versions: ToolVersions,
+  options: { skipEslint?: boolean } = {}
 ): void {
+  const { skipEslint = false } = options;
   const matchPct =
     report.eslintTotal > 0
       ? ((report.matchedCount / report.eslintTotal) * 100).toFixed(1)
@@ -131,8 +137,9 @@ function printReport(
     totalRules > 0
       ? ((report.portedRulesCount / totalRules) * 100).toFixed(1)
       : "N/A";
-  const matchSummary =
-    report.eslintTotal > 0
+  const matchSummary = skipEslint
+    ? "ESLint was skipped."
+    : report.eslintTotal > 0
       ? `Oxlint matched ${matchPct}% of ESLint violations for supported rules.`
       : "ESLint reported no violations.";
   console.log(
@@ -142,12 +149,13 @@ function printReport(
 }
 
 async function main(): Promise<void> {
-  const { repoUrl, branch, typeAware, path } = parseArgs(process.argv);
+  const { repoUrl, branch, typeAware, path, skipEslint } = parseArgs(process.argv);
 
   console.log(`\n[comparator] Starting comparison for: ${repoUrl}`);
   if (branch) console.log(`[comparator] Branch: ${branch}`);
   if (typeAware) console.log(`[comparator] Mode: type-aware`);
   if (path) console.log(`[comparator] Path: ${path}`);
+  if (skipEslint) console.log(`[comparator] Skipping ESLint`);
 
   // Phase 1: Clone and install
   const repoDir = cloneRepo(repoUrl, branch);
@@ -156,19 +164,24 @@ async function main(): Promise<void> {
   // Phase 2: Migrate ESLint config → Oxlint config
   const { unsupportedRules, portedRulesCount } = migrateToOxlint(repoDir, { typeAware });
 
-  // Phase 3: Run ESLint
-  const eslintOutputFile = runEslint(repoDir, { path });
+  // Phase 3: Run ESLint (optional)
+  let eslintViolations: NormalizedViolation[] = [];
+  if (!skipEslint) {
+    const eslintOutputFile = runEslint(repoDir, { path });
+    eslintViolations = parseEslintOutput(eslintOutputFile, repoDir);
+  }
 
   // Phase 4: Run Oxlint
   const oxlintOutputFile = runOxlint(repoDir, { typeAware, path });
 
   // Phase 5: Parse outputs
-  const eslintViolations = parseEslintOutput(eslintOutputFile, repoDir);
   const oxlintViolations = parseOxlintOutput(oxlintOutputFile, repoDir);
 
-  console.log(
-    `\n[comparator] ESLint: ${eslintViolations.length} total violations`
-  );
+  if (!skipEslint) {
+    console.log(
+      `\n[comparator] ESLint: ${eslintViolations.length} total violations`
+    );
+  }
   console.log(
     `[comparator] Oxlint: ${oxlintViolations.length} total violations`
   );
@@ -192,7 +205,7 @@ async function main(): Promise<void> {
       oxlintTsgolint: getPackageVersion(repoDir, "oxlint-tsgolint"),
     }),
   };
-  printReport(report, repoUrl, versions);
+  printReport(report, repoUrl, versions, { skipEslint });
 }
 
 main().catch((err) => {
