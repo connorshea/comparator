@@ -19,10 +19,10 @@ export function runEslint(repoDir: string): string {
   const pm = detectPackageManager(repoDir);
   const [bin, ...eslintArgs] =
     pm === "pnpm"
-      ? ["pnpm", "exec", "eslint", ".", "--format", "json", "--output-file", outputFile]
+      ? ["pnpm", "exec", "eslint", "--format", "json", "--output-file", outputFile]
       : pm === "yarn"
-        ? ["yarn", "exec", "eslint", ".", "--format", "json", "--output-file", outputFile]
-        : ["npx", "eslint", ".", "--format", "json", "--output-file", outputFile];
+        ? ["yarn", "exec", "eslint", "--format", "json", "--output-file", outputFile]
+        : ["npx", "eslint", "--format", "json", "--output-file", outputFile];
 
   const result = spawnSync(bin, eslintArgs, {
       cwd: repoDir,
