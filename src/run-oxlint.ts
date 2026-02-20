@@ -15,7 +15,7 @@ export function migrateToOxlint(
   const { typeAware = false } = options;
   const pm = detectPackageManager(repoDir);
 
-  const packages = ["oxlint", ...(typeAware ? ["oxlint-tsgolint"] : [])];
+  const packages = ["oxlint@latest", ...(typeAware ? ["oxlint-tsgolint@latest"] : [])];
   const addCmd =
     pm === "pnpm"
       ? `pnpm add --save-dev ${packages.join(" ")}`
