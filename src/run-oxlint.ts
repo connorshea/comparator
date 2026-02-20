@@ -117,9 +117,9 @@ function parseMigrationOutput(output: string): string[] {
 
 export function runOxlint(
   repoDir: string,
-  options: { typeAware?: boolean } = {}
+  options: { typeAware?: boolean; path?: string } = {}
 ): string {
-  const { typeAware = false } = options;
+  const { typeAware = false, path: lintPath } = options;
   const outputFile = path.join(repoDir, "oxlint-output.json");
 
   console.log(`[oxlint] Running Oxlint${typeAware ? " (type-aware)" : ""}...`);
@@ -134,6 +134,7 @@ export function runOxlint(
 
   const oxlintArgs = [...execPrefix, "--format", "json"];
   if (typeAware) oxlintArgs.push("--type-aware");
+  if (lintPath) oxlintArgs.push(lintPath);
 
   // Write stdout directly to the output file via fd to avoid ENOBUFS on large repos
   const outFd = fs.openSync(outputFile, "w");

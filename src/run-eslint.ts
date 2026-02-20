@@ -3,7 +3,11 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { detectPackageManager } from "./clone.js";
 
-export function runEslint(repoDir: string): string {
+export function runEslint(
+  repoDir: string,
+  options: { path?: string } = {}
+): string {
+  const { path: lintPath } = options;
   const outputFile = path.join(repoDir, "eslint-output.json");
 
   console.log("[eslint] Running ESLint...");
@@ -17,12 +21,14 @@ export function runEslint(repoDir: string): string {
   }
 
   const pm = detectPackageManager(repoDir);
+  const baseArgs = ["--format", "json", "--output-file", outputFile];
+  if (lintPath) baseArgs.push(lintPath);
   const [bin, ...eslintArgs] =
     pm === "pnpm"
-      ? ["pnpm", "exec", "eslint", "--format", "json", "--output-file", outputFile]
+      ? ["pnpm", "exec", "eslint", ...baseArgs]
       : pm === "yarn"
-        ? ["yarn", "exec", "eslint", "--format", "json", "--output-file", outputFile]
-        : ["npx", "eslint", "--format", "json", "--output-file", outputFile];
+        ? ["yarn", "exec", "eslint", ...baseArgs]
+        : ["npx", "eslint", ...baseArgs];
 
   const result = spawnSync(bin, eslintArgs, {
       cwd: repoDir,

@@ -15,17 +15,19 @@ NOTE: **Only run this tool on repositories you trust. It will install dependenci
 ## Usage
 
 ```bash
-pnpm run compare <repo-url> [--branch <branch>] [--type-aware]
+pnpm run compare <repo-url> [--branch <branch>] [--path <dir-or-glob>] [--type-aware]
 ```
 
 **Options:**
 - `--branch <branch>` — check out a specific branch (defaults to the repo's default branch)
+- `--path <dir-or-glob>` — limit linting to a specific directory or glob (e.g. `src/` or `"src/**/*.ts"`); passed directly to both ESLint and Oxlint
 - `--type-aware` — enable type-aware linting in Oxlint
 
 **Example:**
 ```bash
 pnpm run compare https://github.com/some-org/some-repo
 pnpm run compare https://github.com/some-org/some-repo --branch main --type-aware
+pnpm run compare https://github.com/some-org/some-repo --path src/
 ```
 
 ## Output
@@ -85,7 +87,8 @@ Example repos I have tested the tool on:
 - https://github.com/renovatebot/renovate (use Node 24.11.0)
 - https://github.com/microsoft/vscode (use Node 22.22.0)
 - https://github.com/mastodon/mastodon (note that the ESLint config for Mastodon is _weird_ and intentionally excludes all js/jsx files from linting in a way that Oxlint doesn't manage to migrate correctly, so the results are a bit wonky)
-
+- https://github.com/bluesky-social/social-app (use Node 22.22.0, only apply to the `src/` directory).
+- https://github.com/getsentry/sentry
 
 ## TODO
 
