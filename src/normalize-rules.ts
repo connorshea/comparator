@@ -23,6 +23,7 @@ const PLUGIN_PREFIX_MAP: Record<string, string> = {
   eslint: "",
   react: "react/",
   typescript: "@typescript-eslint/",
+  "typescript-eslint": "@typescript-eslint/",
   import: "import/",
   nextjs: "@next/next/",
   node: "n/",
