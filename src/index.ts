@@ -126,8 +126,12 @@ function printReport(
     totalRules > 0
       ? ((report.portedRulesCount / totalRules) * 100).toFixed(1)
       : "N/A";
+  const matchSummary =
+    report.eslintTotal > 0
+      ? `Oxlint matched ${matchPct}% of ESLint violations for supported rules.`
+      : "ESLint reported no violations.";
   console.log(
-    `\nSummary: Migration ported ${report.portedRulesCount} rules (${portedPct}% of ${totalRules} total). Oxlint matched ${matchPct}% of ESLint violations for supported rules.`
+    `\nSummary: Migration ported ${report.portedRulesCount} rules (${portedPct}% of ${totalRules} total). ${matchSummary}`
   );
   console.log(`Versions: ${versionParts.join(", ")}`);
 }
